@@ -16,6 +16,7 @@ public :
     bool isExplored(int x, int y) const;
     void computeFov();
     bool canWalk(int x, int y) const;
+    void addMonster(int x, int y);
 
     void render() const;
 

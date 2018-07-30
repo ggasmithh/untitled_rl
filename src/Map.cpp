@@ -1,11 +1,8 @@
- #include "libtcod.hpp"
- 
- #include "Map.hpp"
- #include "Actor.hpp"
- #include "Engine.hpp"
+#include "main.hpp"
 
 static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
+static const int MAX_ROOM_MONSTERS = 3;
 
 class BspListener : public ITCODBspCallback {
 private:
@@ -89,11 +86,29 @@ bool Map::canWalk(int x, int y) const {
 
     for (Actor **it = engine.actors.begin(); it != engine.actors.end(); it++) {
         Actor *actor = *it;
-        if (actor->x == x && actor->y == y) {
+        if (actor->blocks && actor->x == x && actor->y == y) {
             return false;
         }
     }
     return true;
+}
+
+void Map::addMonster(int x, int y) {
+    TCODRandom *rng = TCODRandom::getInstance();
+    if (rng->getInt(0, 100) < 80) {
+        // create an orc
+        Actor *orc = new Actor(x, y, 'o', "orc", TCODColor::desaturatedGreen);
+        orc->destructible = new MonsterDestructible(10, 10, 0, "dead orc");
+        orc->attacker = new Attacker(3);
+        orc->ai = new MonsterAi();
+        engine.actors.push(orc);
+    } else {
+        Actor *troll = new Actor(x, y, 'T', "troll", TCODColor::darkerGreen);
+        troll->destructible = new MonsterDestructible(16, 16, 1, "dead troll");
+        troll->attacker = new Attacker(4);
+        troll->ai = new MonsterAi();
+        engine.actors.push(troll);
+    }
 }
 
 void Map::render() const {
@@ -142,9 +157,14 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
         engine.player->y = (y1 + y2) / 2;
     } else {
         TCODRandom *rng = TCODRandom::getInstance();
-        if (rng->getInt(0, 3) == 0) {
-            engine.actors.push(new Actor((x1 + x2) / 2, (y1 + y2) / 2,
-            '@', TCODColor::yellow));
+        int nbMonsters = rng->getInt(0, MAX_ROOM_MONSTERS);
+        while (nbMonsters > 0) {
+            int x = rng->getInt(x1, x2);
+            int y = rng->getInt(y1, y2);
+            if (canWalk(x, y)) {
+                addMonster(x, y);
+            }
+            nbMonsters--;
         }
     }
 }
