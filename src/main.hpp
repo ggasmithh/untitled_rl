@@ -1,5 +1,7 @@
 #include "libtcod.hpp"
 class Actor;
+#include "Pickable.hpp"
+#include "Container.hpp"
 #include "Gui.hpp"
 #include "Destructible.hpp"
 #include "Attacker.hpp"

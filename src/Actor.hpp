@@ -10,9 +10,12 @@ public:
     struct Attacker *attacker; // can damage
     struct Destructible *destructible; // can be damaged
     struct Ai *ai; // self updates
-
+    struct Pickable *pickable; // can be picked up
+    struct Container *container; //  something that can contain actors
 
     Actor(int x, int y, int ch, const char *name, const TCODColor &col);
+    ~Actor();
+    
     void update();
     void render() const;
 };
