@@ -17,5 +17,6 @@ public:
     void update(Actor *owner);
 
 protected:
+    int moveCount;
     void moveOrAttack(Actor *owner, int targetx, int targety);
 };

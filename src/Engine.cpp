@@ -11,11 +11,13 @@ Engine::Engine(int screenWidth, int screenHeight): gameStatus(STARTUP),
     player->ai = new PlayerAi();
     actors.push(player);
     map = new Map(80, 45);
+    gui = new Gui();
 }
 
 Engine::~Engine() {
     actors.clearAndDelete();
     delete map;
+    delete gui;
 }
 
 void Engine::sendToBack(Actor *actor) {
@@ -55,6 +57,5 @@ void Engine::render() {
     
     player->render();
     // player stats
-    TCODConsole::root->print(1, screenHeight - 2, "HP: %d/%d", 
-        (int)player->destructible->hp, (int)player->destructible->maxHp);
+    gui->render();
 }

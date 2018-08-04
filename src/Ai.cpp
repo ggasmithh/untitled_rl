@@ -3,6 +3,9 @@
 
 #include "main.hpp"
 
+// max number of turns monster will follow player before giving up
+static const int TRACKING_TURNS = 3;
+
 void PlayerAi::update(Actor *owner) {
     if (owner->destructible && owner->destructible->isDead()) {
         return;
@@ -42,7 +45,7 @@ bool PlayerAi::moveOrAttack(Actor *owner, int targetx, int targety) {
         Actor *actor = *it;
         if (actor->destructible && actor->destructible->isDead() 
             && actor->x == targetx && actor->y == targety) {
-            printf("There's a %s here.\n", actor->name);
+            engine.gui->message(TCODColor::darkGrey, "There's a %s here.\n", actor->name);
             }
     }
     owner->x = targetx;
@@ -56,6 +59,13 @@ void MonsterAi::update(Actor *owner) {
     }
     
     if (engine.map->isInFov(owner->x, owner->y)) {
+        // we can see the player, start moving towards them
+        moveCount = TRACKING_TURNS;
+    } else {
+        moveCount--;
+    }
+
+    if (moveCount > 0) {
         moveOrAttack(owner, engine.player->x, engine.player->y);
     }
 }
@@ -63,6 +73,10 @@ void MonsterAi::update(Actor *owner) {
 void MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
     int dx = targetx - owner->x;
     int dy = targety - owner->y;
+
+    // these next two will let us implement "wall sliding"
+    int stepdx = (dx > 0 ? 1:-1);
+    int stepdy = (dy > 0 ? 1:-1);
     float distance=sqrtf((dx * dx) + (dy * dy));
 
     if (distance >= 2) {
@@ -72,7 +86,11 @@ void MonsterAi::moveOrAttack(Actor *owner, int targetx, int targety) {
         if (engine.map->canWalk(owner->x + dx, owner->y + dy)) {
             owner->x += dx;
             owner->y += dy;
-        } 
+        } else if (engine.map->canWalk(owner->x + stepdx, owner->y)) {
+            owner->x += stepdx;
+        } else if (engine.map->canWalk(owner->x, owner->y + stepdy)) {
+            owner->y += stepdy;
+        }
     } else if (owner->attacker) {
         owner->attacker->attack(owner, engine.player);
     }
