@@ -17,9 +17,13 @@ public:
     int screenHeight;
     struct Gui *gui;
     TCOD_key_t lastKey;
+    TCOD_mouse_t mouse;
 
     Engine(int screenWidth, int screenHeight);
     ~Engine();
+
+    Actor *getClosestMonster(int x, int y, float range) const;
+    bool pickATile(int *x, int *y, float maxRange = 0.0f);
     void sendToBack(Actor *actor);
     void update();
     void render();

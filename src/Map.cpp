@@ -68,6 +68,10 @@ bool Map::isExplored(int x, int y) const {
 }
 
 bool Map::isInFov(int x, int y) const {
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return false;
+    }
+
     if (map->isInFov(x, y)) {
         tiles[x + y * width].explored = true;
         return true;
@@ -113,10 +117,33 @@ void Map::addMonster(int x, int y) {
 }
 
 void Map::addItem(int x, int y) {
-    Actor *healthPotion = new Actor(x, y, '!', "health potion", TCODColor::violet);
-    healthPotion->blocks = false;
-    healthPotion->pickable = new Healer(4);
-    engine.actors.push(healthPotion);
+    TCODRandom *rng = TCODRandom::getInstance();
+    int dice = rng->getInt(0, 100);
+    
+    // 70% chance for a health potion
+    if (dice < 70) {
+        Actor *healthPotion = new Actor(x, y, '!', 
+            "health potion", TCODColor::violet);
+        healthPotion->blocks = false;
+        healthPotion->pickable = new Healer(4);
+        engine.actors.insertBefore(healthPotion, 0);
+        
+    // 10% chance for a scroll of lightning bolt
+    } else if (dice < 80) {
+        Actor *scrollOfLightningBolt = new Actor(x, y, '#', 
+            "scroll of lightning bolt", TCODColor::lightYellow);
+        scrollOfLightningBolt->blocks = false;
+        scrollOfLightningBolt->pickable = new LightningBolt(5, 20);
+        engine.actors.insertBefore(scrollOfLightningBolt, 0);
+
+    // 10% chance for a scroll of fireball
+    } else if (dice < 90) {
+        Actor *scrollOfFireball = new Actor(x, y, '#', 
+            "scroll of fireball", TCODColor::lightYellow);
+        scrollOfFireball->blocks = false;
+        scrollOfFireball->pickable = new Fireball(3, 12);
+        engine.actors.insertBefore(scrollOfFireball, 0);
+    }
 }
 
 void Map::render() const {

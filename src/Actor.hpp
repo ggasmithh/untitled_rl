@@ -16,6 +16,7 @@ public:
     Actor(int x, int y, int ch, const char *name, const TCODColor &col);
     ~Actor();
     
+    float getDistance(int cx, int cy) const;
     void update();
     void render() const;
 };
