@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "typeinfo": "cpp",
-        "system_error": "cpp",
-        "hash_map": "cpp"
-    }
-}
