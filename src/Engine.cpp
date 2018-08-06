@@ -43,6 +43,17 @@ Actor *Engine::getClosestMonster(int x, int y, float range) const {
     return closest;
 }
 
+Actor *Engine::getActor(int x, int y) const {
+    for (Actor **it = engine.actors.begin(); it != engine.actors.end(); it++) {
+        Actor *actor = *it;
+        if (actor->x == x && actor->y == y && actor->destructible 
+            && !actor->destructible->isDead()) {
+                return actor;
+            }
+    }
+    return NULL;
+}
+
 bool Engine::pickATile(int *x, int *y, float maxRange) {
     // 0 range = player FOV
 
@@ -62,7 +73,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
                 }
             }
         }
-        TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,
+        TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE_MOVE,
             &lastKey,&mouse);
 
         if ((map->isInFov(mouse.cx, mouse.cy) && maxRange == 0) 
