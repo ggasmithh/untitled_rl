@@ -51,7 +51,6 @@ void Gui::render() {
     // blit the GUI console to the Root console
     TCODConsole::blit(con, 0, 0, engine.screenWidth, PANEL_HEIGHT,
     TCODConsole::root, 0, engine.screenHeight - PANEL_HEIGHT);
-
 }
 
 void Gui::renderMouseLook() {
@@ -100,8 +99,6 @@ void Gui::renderBar(int x, int y, int width, const char *name,
     con->setDefaultForeground(TCODColor::white);
     con->printEx(x + width / 2, y, TCOD_BKGND_NONE, TCOD_CENTER, 
         "%s: %g/%g", name, value, maxValue);
-
-
 }
 
 Gui::Message::Message(const char *text, const TCODColor &col):
@@ -156,4 +153,23 @@ void Gui::message(const TCODColor &col, const char *text, ...) {
         lineBegin = lineEnd + 1;
 
     } while (lineEnd);
+}
+
+void Gui::save(TCODZip &zip) {
+    zip.putInt(log.size());
+    for (Message **it = log.begin(); it != log.end(); it++) {
+        zip.putString((*it)->text);
+        zip.putColor(&(*it)->col);
+    }
+
+}
+
+void Gui::load(TCODZip &zip) {
+    int nbMessages = zip.getInt();
+    while (nbMessages > 0) {
+        const char *text = zip.getString();
+        TCODColor col = zip.getColor();
+        message(col, text);
+        nbMessages--;
+    }
 }

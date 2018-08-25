@@ -229,3 +229,42 @@ void ConfusedMonsterAi::update(Actor *owner) {
     }
 }
 
+void PlayerAi::save(TCODZip &zip) {
+    zip.putInt(PLAYER);
+}
+
+void PlayerAi::load(TCODZip &zip) {
+}
+
+void MonsterAi::save(TCODZip &zip) {
+    zip.putInt(MONSTER);
+    zip.putInt(moveCount);
+}
+
+void MonsterAi::load(TCODZip &zip) {
+    moveCount = zip.getInt();
+}
+
+void ConfusedMonsterAi::save(TCODZip &zip) {
+    zip.putInt(CONFUSED_MONSTER);
+    zip.putInt(nbTurns);
+    oldAi->save(zip);
+}
+
+void ConfusedMonsterAi::load(TCODZip &zip) {
+    nbTurns = zip.getInt();
+    oldAi = Ai::create(zip);
+}
+
+Ai *Ai::create(TCODZip &zip) {
+    AiType type = (AiType)zip.getInt();
+    Ai *ai = NULL;
+    switch(type) {
+        case PLAYER: ai = new PlayerAi(); break;
+        case MONSTER: ai = new MonsterAi(); break;
+        case CONFUSED_MONSTER: ai = new ConfusedMonsterAi(0, NULL); break;
+    }
+    ai->load(zip);
+    return ai;
+}
+

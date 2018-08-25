@@ -16,14 +16,14 @@ public:
     bool visitNode(TCODBsp *node, void *userData) {
         if (node->isLeaf()) {
             int x, y, w, h;
+            bool withActors = (bool)userData;
 
             // room digging
-            TCODRandom *rng = TCODRandom::getInstance();
-            w = rng->getInt(ROOM_MIN_SIZE, node->w - 2);
-            h = rng->getInt(ROOM_MIN_SIZE, node->h - 2);
-            x = rng->getInt(node-> x + 1, node-> x + node->w - w - 1);
-            y = rng->getInt(node->y + 1, node->y+node->h - h - 1);
-            map.createRoom(roomNum == 0, x, y, x + w - 1, y + h - 1);
+            w = map.rng->getInt(ROOM_MIN_SIZE, node->w - 2);
+            h = map.rng->getInt(ROOM_MIN_SIZE, node->h - 2);
+            x = map.rng->getInt(node-> x + 1, node-> x + node->w - w - 1);
+            y = map.rng->getInt(node->y + 1, node->y+node->h - h - 1);
+            map.createRoom(roomNum == 0, x, y, x + w - 1, y + h - 1, withActors);
             // if this isnt the first room, connect it to the last room
             if (roomNum != 0) {
                 // first arm
@@ -43,20 +43,27 @@ public:
 
 };
 
- Map::Map(int width, int height) : width(width),height(height) {
-    tiles = new Tile[width*height];
-    map=new TCODMap(width,height);
-
-    TCODBsp bsp(0, 0, width, height);
-    bsp.splitRecursive(NULL, 8, ROOM_MAX_SIZE, ROOM_MAX_SIZE, 1.5f, 1.5f);
-    BspListener listener(*this);
-    bsp.traverseInvertedLevelOrder(&listener, NULL);
-    
+ Map::Map(int width, int height): width(width),height(height) {
+    // 0x7FFFFFFF is the highest 32 bit signed int
+    seed = TCODRandom::getInstance()->getInt(0, 0x7FFFFFFF);
  }
 
 Map::~Map() {
     delete [] tiles;
     delete map;
+}
+
+void Map::init(bool withActors) {
+    rng = new TCODRandom(seed, TCOD_RNG_CMWC);
+    tiles = new Tile[width * height];
+    map = new TCODMap(width, height);
+
+    TCODBsp bsp(0, 0, width, height);
+    bsp.splitRecursive(NULL, 8, ROOM_MAX_SIZE, ROOM_MAX_SIZE, 1.5f, 1.5f);
+    BspListener listener(*this);
+    /*  reading about casting as (void *) confuses me but it works and it's 
+        what this library wants, so.... */
+    bsp.traverseInvertedLevelOrder(&listener, (void *)withActors);
 }
 
 bool Map::isWall(int x, int y) const {
@@ -192,9 +199,11 @@ void Map::dig(int x1, int y1, int x2, int y2) {
     }
 }
 
-void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
+void Map::createRoom(bool first, int x1, int y1, int x2, int y2, bool withActors) {
     dig(x1, y1, x2, y2);
 
+    if (!withActors) {return;}
+    
     // put the player in the middle of the first room
     if (first) {
         engine.player->x = (x1 + x2) / 2;
@@ -222,5 +231,21 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2) {
             }
             nbItems--;
         }
+    }
+}
+
+void Map::save(TCODZip &zip) {
+    zip.putInt(seed);
+    for (int i = 0; i < width * height; i++) {
+        zip.putInt(tiles[i].explored);
+    }
+}
+
+void Map::load(TCODZip &zip) {
+    seed = zip.getInt();
+    init(false);
+    for (int i = 0; i < width * height; i++) {
+        tiles[i].explored = zip.getInt();
+        
     }
 }

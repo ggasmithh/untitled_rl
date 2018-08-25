@@ -2,8 +2,14 @@
 #include "main.hpp"
 
 Destructible::Destructible(float maxHp, float hp, float defense, const char *corpseName):
-    maxHp(maxHp), hp(hp), defense(defense), corpseName(corpseName) {
-    }
+    maxHp(maxHp), hp(hp), defense(defense) {
+
+    this->corpseName = strdup(corpseName);
+}
+
+Destructible::~Destructible() {
+    free((char*) corpseName);
+}
 
 float Destructible::heal(float amount) {
     hp += amount;
@@ -55,4 +61,39 @@ void PlayerDestructible::die(Actor *owner) {
     engine.gui->message(TCODColor::darkRed, "You died!\n");
     Destructible::die(owner);
     engine.gameStatus = Engine::DEFEAT;
+}
+
+void Destructible::load(TCODZip &zip) {
+    maxHp = zip.getInt();
+    hp = zip.getInt();
+    defense = zip.getInt();
+    corpseName = strdup(zip.getString());
+}
+
+void Destructible::save(TCODZip &zip) {
+    zip.putInt(maxHp);
+    zip.putInt(hp);
+    zip.putInt(defense);
+    zip.putString(corpseName);
+}
+
+void PlayerDestructible::save(TCODZip &zip) {
+    zip.putInt(PLAYER);
+    Destructible::save(zip);
+}
+
+void MonsterDestructible::save(TCODZip &zip) {
+    zip.putInt(MONSTER);
+    Destructible::save(zip);
+}
+
+Destructible *Destructible::create(TCODZip &zip) {
+    DestructibleType type = (DestructibleType)zip.getInt();
+    Destructible *destructible = NULL;
+    switch(type) {
+        case MONSTER: destructible = new MonsterDestructible(0, 0, 0, NULL); break;
+        case PLAYER: destructible = new PlayerDestructible(0, 0, 0, NULL); break;
+    }
+    destructible->load(zip);
+    return destructible;
 }

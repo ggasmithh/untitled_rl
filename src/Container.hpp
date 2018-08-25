@@ -9,4 +9,6 @@ public:
     bool add(Actor *actor);
     void remove(Actor *actor);
 
+    void load(TCODZip &zip);
+    void save(TCODZip &zip);
 };

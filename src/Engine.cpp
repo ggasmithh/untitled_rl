@@ -2,16 +2,11 @@
 
 #include "main.hpp"
 
-Engine::Engine(int screenWidth, int screenHeight): gameStatus(STARTUP), 
-    fovRadius(10), screenWidth(screenWidth), screenHeight(screenHeight) {
+Engine::Engine(int screenWidth, int screenHeight): 
+    gameStatus(STARTUP), fovRadius(10), 
+    screenWidth(screenWidth), screenHeight(screenHeight) {
+
     TCODConsole::initRoot(80,50,"libtcod C++ tutorial",false);
-    player = new Actor(40, 25, '@', "player", TCODColor::white);
-    player->destructible = new PlayerDestructible(30, 30, 2, "your cadaver");
-    player->attacker = new Attacker(5);
-    player->ai = new PlayerAi();
-    player->container = new Container(26); // one slot for each letter
-    actors.push(player);
-    map = new Map(80, 45);
     gui = new Gui();
 }
 
@@ -19,6 +14,78 @@ Engine::~Engine() {
     actors.clearAndDelete();
     delete map;
     delete gui;
+}
+
+void Engine::init() {
+    player = new Actor(40, 25, '@', "player", TCODColor::white);
+    player->destructible = new PlayerDestructible(30, 30, 2, "your cadaver");
+    player->attacker = new Attacker(5);
+    player->ai = new PlayerAi();
+    player->container = new Container(26); // one slot for each letter
+    actors.push(player);
+    map = new Map(80, 45);
+    map->init(true);
+}
+
+void Engine::load() {
+    if (TCODSystem::fileExists("game.sav")) {
+        TCODZip zip;
+        zip.loadFromFile("game.sav");
+        
+        // load map
+        int width = zip.getInt();
+        int height = zip.getInt();
+        map->load(zip);
+
+        // load player
+        player = new Actor(0, 0, 0, NULL, TCODColor::white);
+        player->load(zip);
+        actors.push(player);
+
+        // load the other actors
+        int nbActors = zip.getInt();
+        while (nbActors > 0) {
+            Actor *actor = new Actor(0, 0, 0, NULL, TCODColor::white);
+            actor->load(zip);
+            actors.push(actor);
+            nbActors--;
+        }
+
+        // load the message log
+        gui->load(zip);
+    } else {
+        engine.init();
+    }
+
+}
+
+void Engine::save() {
+    if (player->destructible->isDead()) {
+        TCODSystem::deleteFile("game.sav");
+    } else {
+        TCODZip zip;
+        // save map
+        zip.putInt(map->width);
+        zip.putInt(map->height);
+        map->save(zip);
+
+        // save player
+        player->save(zip);
+
+        // save other actors
+        zip.putInt(actors.size() - 1);
+        for (Actor **it = actors.begin(); it != actors.end(); it++) {
+            if (*it != player) {
+                (*it)->save(zip);
+            }
+        }
+
+        // save message log
+        gui->save(zip);
+
+        // compressed data to file
+        zip.saveToFile("game.sav");
+    }
 }
 
 Actor *Engine::getClosestMonster(int x, int y, float range) const {
@@ -73,7 +140,7 @@ bool Engine::pickATile(int *x, int *y, float maxRange) {
                 }
             }
         }
-        TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE_MOVE,
+        TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS|TCOD_EVENT_MOUSE,
             &lastKey,&mouse);
 
         if ((map->isInFov(mouse.cx, mouse.cy) && maxRange == 0) 

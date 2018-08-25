@@ -1,4 +1,4 @@
-class Actor { 
+class Actor: public Persistent { 
 public:
     int x,y; // position on map
     int ch; // ascii code
@@ -19,4 +19,7 @@ public:
     float getDistance(int cx, int cy) const;
     void update();
     void render() const;
+
+    void load(TCODZip &zip);
+    void save(TCODZip &zip);
 };
