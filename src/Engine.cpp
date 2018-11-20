@@ -27,67 +27,6 @@ void Engine::init() {
     map->init(true);
 }
 
-void Engine::load() {
-    if (TCODSystem::fileExists("game.sav")) {
-        TCODZip zip;
-        zip.loadFromFile("game.sav");
-        
-        // load map
-        int width = zip.getInt();
-        int height = zip.getInt();
-        map->load(zip);
-
-        // load player
-        player = new Actor(0, 0, 0, NULL, TCODColor::white);
-        player->load(zip);
-        actors.push(player);
-
-        // load the other actors
-        int nbActors = zip.getInt();
-        while (nbActors > 0) {
-            Actor *actor = new Actor(0, 0, 0, NULL, TCODColor::white);
-            actor->load(zip);
-            actors.push(actor);
-            nbActors--;
-        }
-
-        // load the message log
-        gui->load(zip);
-    } else {
-        engine.init();
-    }
-
-}
-
-void Engine::save() {
-    if (player->destructible->isDead()) {
-        TCODSystem::deleteFile("game.sav");
-    } else {
-        TCODZip zip;
-        // save map
-        zip.putInt(map->width);
-        zip.putInt(map->height);
-        map->save(zip);
-
-        // save player
-        player->save(zip);
-
-        // save other actors
-        zip.putInt(actors.size() - 1);
-        for (Actor **it = actors.begin(); it != actors.end(); it++) {
-            if (*it != player) {
-                (*it)->save(zip);
-            }
-        }
-
-        // save message log
-        gui->save(zip);
-
-        // compressed data to file
-        zip.saveToFile("game.sav");
-    }
-}
-
 Actor *Engine::getClosestMonster(int x, int y, float range) const {
     // 0 range is infinite
     Actor *closest = NULL;

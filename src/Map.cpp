@@ -233,19 +233,3 @@ void Map::createRoom(bool first, int x1, int y1, int x2, int y2, bool withActors
         }
     }
 }
-
-void Map::save(TCODZip &zip) {
-    zip.putInt(seed);
-    for (int i = 0; i < width * height; i++) {
-        zip.putInt(tiles[i].explored);
-    }
-}
-
-void Map::load(TCODZip &zip) {
-    seed = zip.getInt();
-    init(false);
-    for (int i = 0; i < width * height; i++) {
-        tiles[i].explored = zip.getInt();
-        
-    }
-}

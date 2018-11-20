@@ -1,4 +1,4 @@
-class Pickable: public Persistent {
+class Pickable: {
 public:
     virtual ~Pickable() {};
 
@@ -22,8 +22,6 @@ public:
     Healer(float amount);
     bool use(Actor *owner, Actor *wearer);
 
-    void load(TCODZip &zip);
-    void save(TCODZip &zip);
 };
 
 class LightningBolt: public Pickable {
@@ -33,8 +31,6 @@ public:
     LightningBolt(float range, float damage);
     bool use(Actor *owner, Actor *wearer);
 
-    void load(TCODZip &zip);
-    void save(TCODZip &zip);
 };
 
 /* i get why we are doing this from a code perspective 
@@ -44,7 +40,6 @@ public:
     Fireball(float range, float damage);
     bool use(Actor *owner, Actor *wearer);
 
-    void save(TCODZip &zip);
 };
 
 class Confuser: public Pickable {
@@ -54,6 +49,4 @@ public:
     Confuser(int nbTurns, float range);
     bool use(Actor *owner, Actor *wearer);
 
-    void load(TCODZip &zip);
-    void save(TCODZip &zip);
 };

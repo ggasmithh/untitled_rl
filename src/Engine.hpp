@@ -30,8 +30,6 @@ public:
     void render();
 
     void init();
-    void load();
-    void save();
 
 private:
     bool computeFov;

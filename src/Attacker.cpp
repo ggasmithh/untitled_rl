@@ -19,11 +19,3 @@ void Attacker::attack(Actor *owner, Actor *target) {
         engine.gui->message(TCODColor::darkGrey, "%s attacks %s in vain.\n", owner->name, target->name);
     }
 }
-
-void Attacker::load(TCODZip &zip) {
-    power = zip.getFloat();
-}
-
-void Attacker::save(TCODZip &zip) {
-    zip.putInt(power);
-}
